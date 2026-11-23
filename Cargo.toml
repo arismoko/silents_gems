@@ -2,7 +2,7 @@
 # Ported from: Silent's Gems 5.2.0 (SilentChaos512/SilentGems, MIT), Minecraft Java
 # 26.2 NeoForge. Local-only until the maintainer approves publishing.
 name = "silentgems"
-version = "5.3.1"
+version = "5.3.2"
 edition = "2024"
 license = "MIT"
 description = "Silent's Gems for Sunrise: gems, storage blocks, ores and redstone lamps"
