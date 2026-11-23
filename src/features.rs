@@ -812,3 +812,8 @@ fn teleport_nearby(host: &mut dyn ServerHost, level: LevelRef, pos: [i32; 3]) {
         }
     }
 }
+
+/// A world closed: what was queued for it never lands in the next one opened in this session.
+pub fn clear_pending() {
+    *queue().lock_pending() = Pending::default();
+}

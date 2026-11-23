@@ -139,3 +139,8 @@ pub fn on_level_tick_post(host: &mut dyn ServerHost, level: LevelRef) {
         let _ = level.set_block(host, pos, state, BlockUpdateFlags::CLIENTS);
     }
 }
+
+/// A world closed: lamp positions queued for it are dropped, not carried into the next save.
+pub fn clear_queue() {
+    locked().by_level.clear();
+}

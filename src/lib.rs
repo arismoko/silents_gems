@@ -21,7 +21,7 @@ pub mod support;
 
 use mod_api::{
     self, BlockChangedEvent, EntityTickListenedEvent, EntityTickPostEvent, Hooks, HostSide,
-    LevelHost, LevelTickPostEvent, Registrar, RegistrationContext,
+    LevelHost, LevelTickPostEvent, Registrar, RegistrationContext, ServerHost, ServerStoppedEvent,
 };
 
 /// The SDK's one `Default` session instance; the queue lives behind the lock in [`support`],
@@ -35,6 +35,12 @@ impl Hooks for Mod {
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
         support::declare(r);
         features::declare(r);
+    }
+
+    /// A world closed: drop what was queued for it.
+    fn server_stopped(&self, _: &mut dyn ServerHost, _: &mut ServerStoppedEvent) {
+        features::clear_pending();
+        support::clear_queue();
     }
 
     /// Rabbit coffee needs every entity's tick told.
