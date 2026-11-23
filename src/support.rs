@@ -1,23 +1,22 @@
-//! The lamp rule's game glue: a queued neighbour write, applied after the level's tick.
+//! The lamp rule's game glue.
 //!
-//! Upstream's `GemLampBlock` switches its own block to the one its state table names, on place,
-//! on a neighbour change and on a scheduled tick (`block/GemLampBlock.java:44-66`). A `BlockPart`
-//! is the scoped way to hear the neighbour change, but that hook's host cannot write the level,
-//! so this module keeps the positions it must revisit and applies them at
-//! `Hooks::level_tick_post`, where the level can be written — the
-//! same one-tick shape More Red and Glassential use.
+//! Upstream's `GemLampBlock` switches its own block to the one its state table names, on place
+//! and on a neighbour change (`block/GemLampBlock.java`, `checkAndUpdateState`). The neighbour
+//! change is the [`Lamp`] part's `neighbor_changed`, whose host writes the level, so it switches
+//! the lamp at once. A part has no `onPlace`, so a placed lamp is heard through `block_changed`,
+//! whose host cannot write: those positions are queued and checked at `Hooks::level_tick_post`.
 //!
 //! The queue holds positions only: at the tick the current block id is parsed back to
 //! (gem, state) with [`crate::runtime::lamp_of`], so a position whose block changed in between
-//! (broken, replaced by a player) is simply dropped. A write made here reports `block_changed`
-//! like any other; that queues the position once more, and the next tick finds the target equal
-//! to the current state and writes nothing, so the rule settles in one pass.
+//! (broken, replaced by a player) is simply dropped. A lamp switched by either path reports
+//! `block_changed` like any other write; that queues it once more, and the next pass finds the
+//! target equal to the current state and writes nothing.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use mod_api::{
-    self, BlockChangedEvent, BlockPart, BlockUpdateFlags, LevelHost, LevelRef, LevelTicksHost,
+    self, BlockChangedEvent, BlockPart, BlockUpdateFlags, LevelHost, LevelRef, LevelWriteHost,
     NeighborChangedEvent, Registrar, ServerHost,
 };
 
@@ -31,12 +30,23 @@ pub struct Lamp;
 
 #[mod_api::sunrise_part]
 impl BlockPart for Lamp {
-    /// `GemLampBlock.neighborChanged`: remember the lamp for this tick's write pass.
-    fn neighbor_changed(&self, _level: &mut dyn LevelTicksHost, event: &mut NeighborChangedEvent) {
-        enqueue(
-            event.dimension.key().id(),
-            [event.pos.x, event.pos.y, event.pos.z],
-        );
+    /// `GemLampBlock.neighborChanged`: switch to the lamp its table names for the signal now.
+    fn neighbor_changed(&self, level: &mut dyn LevelWriteHost, event: &mut NeighborChangedEvent) {
+        let pos = [event.pos.x, event.pos.y, event.pos.z];
+        let Some((gem, current)) = level.state_block(event.state).and_then(runtime::lamp_of) else {
+            return;
+        };
+        let Some(powered) = level.has_neighbor_signal(pos) else {
+            return;
+        };
+        let target = current.with_power(powered);
+        if target == current {
+            return;
+        }
+        if let Some(state) = level.block_state_id(&target.block_name(gem.name)) {
+            // `UPDATE_CLIENTS`, as upstream's `world.setBlock(pos, newState, UPDATE_CLIENTS)`.
+            level.set_block(pos, state, BlockUpdateFlags::CLIENTS);
+        }
     }
 }
 
@@ -82,7 +92,8 @@ pub fn declare(r: &mut dyn Registrar) {
     }
 }
 
-/// A block was committed in the world: a lamp that was placed (or written) is due a check.
+/// A block was committed in the world: a lamp that was placed (or written) is due a check at the
+/// end of the tick.
 ///
 /// This is the `onPlace` half of upstream's rule. It runs for every block change in the level, so
 /// it rejects anything whose new block id is not one of the 84 before it touches the queue.

@@ -21,7 +21,7 @@ A port of [Silent's Gems](https://github.com/SilentChaos512/SilentGems) by Silen
 
 - Silent Gear integration is not ported. A teleporter does not turn to face the way it was placed (its model is the same on every side).
 - Glowroses and the rabbit coffee read their light and timer from the mod's settings rather than a config file.
-- A lamp switches at the end of the tick its signal changes, not within the same block update.
+- A lamp just placed where it reads a signal switches at the end of that tick, not within the placement; a signal change switches it at once.
 
 ## Building
 
@@ -33,7 +33,7 @@ cargo sunrise-mod run      # builds it and starts the game with it
 cargo test
 ```
 
-`sunrise-mod.toml` pins the Sunrise Dev build `dev-2026-11-22-7cfdf81` (game commit `7cfdf81463`). Sunrise builds native mods from source on the player's computer, against the exact game build.
+`sunrise-mod.toml` pins the Sunrise Dev build `dev-2026-11-23-ebd2d22` (game commit `ebd2d226fb`). Sunrise builds native mods from source on the player's computer, against the exact game build.
 
 ## Licence and credits
 

@@ -10,7 +10,7 @@
 //! | Moment | Where | What it does |
 //! |---|---|---|
 //! | `register` | this module | attaches the lamp part to the 84 lamp blocks |
-//! | `neighbor_changed` | [`support::Lamp`] Part | queues a lamp whose neighbour changed |
+//! | `neighbor_changed` | [`support::Lamp`] Part | switches a lamp for the signal it reads |
 //! | `block_changed` | this module | queues a lamp that was placed or written |
 //! | `level_tick_post` | this module | writes each queued lamp's state for the signal it reads |
 

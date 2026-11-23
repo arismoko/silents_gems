@@ -7,7 +7,7 @@ use std::sync::{Mutex, MutexGuard, OnceLock};
 use mod_api::{
     self, AttachmentCodec, AttachmentType, BlockPart, BlockUpdateFlags, Component, Compound,
     EntityTickListenedEvent, EntityTickPostEvent, Hand, Host, HostSide, InteractionResult,
-    ItemPart, ItemStack, LevelRef, LevelSide, LevelTicksHost, LightEmissionEvent, MayPlaceOnEvent,
+    ItemPart, ItemStack, LevelRef, LevelSide, LevelWriteHost, LightEmissionEvent, MayPlaceOnEvent,
     NeighborChangedEvent, Registrar, ServerHost, SettingSpec, Tag, UseOnEvent, UseWithoutItemEvent,
 };
 
@@ -277,8 +277,9 @@ impl BlockPart for RedstoneTeleporter {
         Teleporter { anchor: false }.use_without_item(host, event)
     }
 
-    /// `GemRedstoneTeleporterBlock.neighborChanged`: remember the block for this tick's pass.
-    fn neighbor_changed(&self, _: &mut dyn LevelTicksHost, event: &mut NeighborChangedEvent) {
+    /// `GemRedstoneTeleporterBlock.neighborChanged`: remember the block for this tick's pass, as
+    /// moving entities needs the server host this hook doesn't lend.
+    fn neighbor_changed(&self, _: &mut dyn LevelWriteHost, event: &mut NeighborChangedEvent) {
         queue()
             .lock_pending()
             .redstone
