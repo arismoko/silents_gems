@@ -74,8 +74,16 @@ def main() -> None:
                 shutil.copyfile(gen / "assets/silentgems" / sub, assets / sub)
             (assets / "textures/block").mkdir(parents=True, exist_ok=True)
             shutil.copyfile(main_assets / f"textures/block/{block}.png", assets / f"textures/block/{block}.png")
-            shutil.copyfile(gen / f"data/silentgems/loot_table/blocks/{block}.json",
-                            data / f"silentgems/loot_table/blocks/{block}.json")
+            # The original's self-drop, written in 26.3's loot shape (one `condition`, integer rolls).
+            write(data / f"silentgems/loot_table/blocks/{block}.json", {
+                "type": "minecraft:block",
+                "pools": [{
+                    "condition": {"type": "minecraft:survives_explosion"},
+                    "entries": [{"type": "minecraft:item", "name": f"silentgems:{block}"}],
+                    "rolls": 1,
+                }],
+                "random_sequence": f"silentgems:blocks/{block}",
+            })
             recipe = json.loads((gen / f"data/silentgems/recipe/{block}.json").read_text())
             # The colourless-glass convention tag holds vanilla glass; name it directly.
             if recipe["key"].get("#") == "#c:glass_blocks/colorless":
