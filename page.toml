@@ -10,10 +10,11 @@ What it does:
 - 84 ores in stone, deepslate, the Nether and the End, generating in each dimension as the original's defaults set, with silk touch and fortune drops.
 - Smelting and blasting a gem ore gives its gem.
 - 84 gem lamps: a lamp lights while powered by redstone, and an inverted lamp lights while unpowered.
+- A building palette for every gem: bricks, small bricks, tiles, polished, smooth and chiseled stone, and coloured glass (147 blocks), each crafted from eight vanilla blocks around one gem.
 
 Differences from the original:
 
-- Only the gems, ores, storage blocks and lamps are ported: the glass, bricks, tiles, teleporters, plants, tools, armour, soul gems and Silent Gear integration are not.
+- The teleporters, glowroses, food, pet summoners, chaos and silver lines and Silent Gear integration are not ported yet.
 - A lamp switches at the end of the tick its signal changes, not within the same block update.
 """
 categories = ["decoration", "worldgen"]

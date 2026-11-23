@@ -104,6 +104,27 @@
     "silentgems:pearl_ore",
     "silentgems:deepslate_pearl_ore",
     "silentgems:nether_pearl_ore",
-    "silentgems:end_pearl_ore"
+    "silentgems:end_pearl_ore",
+    "silentgems:ruby_bricks",
+    "silentgems:carnelian_bricks",
+    "silentgems:topaz_bricks",
+    "silentgems:citrine_bricks",
+    "silentgems:heliodor_bricks",
+    "silentgems:moldavite_bricks",
+    "silentgems:peridot_bricks",
+    "silentgems:turquoise_bricks",
+    "silentgems:kyanite_bricks",
+    "silentgems:sapphire_bricks",
+    "silentgems:iolite_bricks",
+    "silentgems:alexandrite_bricks",
+    "silentgems:ammolite_bricks",
+    "silentgems:rose_quartz_bricks",
+    "silentgems:black_diamond_bricks",
+    "silentgems:white_diamond_bricks",
+    "silentgems:garnet_bricks",
+    "silentgems:aquamarine_bricks",
+    "silentgems:tanzanite_bricks",
+    "silentgems:opal_bricks",
+    "silentgems:pearl_bricks"
   ]
 }
