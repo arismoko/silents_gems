@@ -1,8 +1,8 @@
-summary = "Twenty-one gems with their ores, storage blocks and redstone gem lamps."
+summary = "Twenty-one gems with their ores, building blocks, lamps, glowroses, teleporters, coffee and more."
 description = """
-Twenty-one gems with their ores, storage blocks and redstone gem lamps.
+Twenty-one gems with their ores, building blocks, lamps, glowroses, teleporters, coffee and more.
 
-A port of [Silent's Gems](https://github.com/SilentChaos512/SilentGems) by SilentChaos512 to [Sunrise](https://playsunrise.net) (Minecraft Java 26.3). The gems, ores and blocks are content; the lamps' redstone rule is a small native part.
+A port of [Silent's Gems](https://github.com/SilentChaos512/SilentGems) by SilentChaos512 to [Sunrise](https://playsunrise.net) (Minecraft Java 26.3). The gems, ores and blocks are content; the lamps, teleporters, glowroses, summoners and rabbit coffee are native parts.
 
 What it does:
 
@@ -11,10 +11,16 @@ What it does:
 - Smelting and blasting a gem ore gives its gem.
 - 84 gem lamps: a lamp lights while powered by redstone, and an inverted lamp lights while unpowered.
 - A building palette for every gem: bricks, small bricks, tiles, polished, smooth and chiseled stone, and coloured glass (147 blocks), each crafted from eight vanilla blocks around one gem.
+- Silver and chaos: ores in stone and deepslate, raw silver, ingots, nuggets, rods, chaos essence, storage blocks and the reinforced rods, with the original's recipes.
+- 21 glowroses (free-standing and potted) that grow in all three dimensions and glow, with light levels in the mod's settings; sparkling bone meal scatters them over grass.
+- Food: potato on a stick, sugar cookie, cup of coffee, meaty and fishy stews (raw and cooked) and the iron potato, with their effects. Rabbits drop a cup of coffee on a timer (settings).
+- Summon Kitty and Summon Puppy call a tamed cat or wolf.
+- Teleporters, redstone teleporters and the anchor: link two with the teleporter linker (across dimensions too) and click to travel; a redstone teleporter sends everything within five blocks when powered. Gem glass tints a beacon's beam.
 
 Differences from the original:
 
-- The teleporters, glowroses, food, pet summoners, chaos and silver lines and Silent Gear integration are not ported yet.
+- Silent Gear integration is not ported. A teleporter does not turn to face the way it was placed (its model is the same on every side).
+- Glowroses and the rabbit coffee read their light and timer from the mod's settings rather than a config file.
 - A lamp switches at the end of the tick its signal changes, not within the same block update.
 """
 categories = ["decoration", "worldgen"]

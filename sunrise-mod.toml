@@ -2,7 +2,7 @@
 id = "silentgems"
 name = "Silent's Gems"
 version = "5.3.3"
-description = "Twenty-one gems with their ores, storage blocks and redstone gem lamps."
+description = "Twenty-one gems with their ores, building blocks, lamps, glowroses, teleporters, coffee and more."
 authors = ["SilentChaos512", "arismoko"]
 license = "MIT"
 credits = "Ported to Minecraft 26.3 by AdLf0208, and to Sunrise by arismoko."

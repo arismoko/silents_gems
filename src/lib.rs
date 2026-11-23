@@ -14,12 +14,14 @@
 //! | `block_changed` | this module | queues a lamp that was placed or written |
 //! | `level_tick_post` | this module | writes each queued lamp's state for the signal it reads |
 
+pub mod features;
+pub mod rules;
 pub mod runtime;
 pub mod support;
 
 use mod_api::{
-    self, BlockChangedEvent, Hooks, HostSide, LevelHost, LevelTickPostEvent, Registrar,
-    RegistrationContext,
+    self, BlockChangedEvent, EntityTickListenedEvent, EntityTickPostEvent, Hooks, HostSide,
+    LevelHost, LevelTickPostEvent, Registrar, RegistrationContext,
 };
 
 /// The SDK's one `Default` session instance; the queue lives behind the lock in [`support`],
@@ -32,6 +34,17 @@ impl Hooks for Mod {
     /// Attach the lamp part to every lamp block the package declares.
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
         support::declare(r);
+        features::declare(r);
+    }
+
+    /// Rabbit coffee needs every entity's tick told.
+    fn entity_tick_listened(&self, host: HostSide, event: &mut EntityTickListenedEvent) {
+        features::on_tick_listened(host, event);
+    }
+
+    /// After entities tick: each rabbit counts its coffee timer.
+    fn entity_tick_post(&self, host: HostSide, event: &mut EntityTickPostEvent<'_>) {
+        features::on_entity_tick_post(host, event);
     }
 
     /// A block was committed: a lamp that was placed (or written) is due a check.
@@ -44,6 +57,7 @@ impl Hooks for Mod {
         let HostSide::Server(host) = host else {
             return;
         };
+        features::on_level_tick_post(host, event.level);
         support::on_level_tick_post(host, event.level);
     }
 }
