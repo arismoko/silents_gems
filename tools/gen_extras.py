@@ -229,7 +229,7 @@ def main() -> None:
     anchor_title = "Teleporter Anchor"
     for gem, title, *_ in GEMS:
         rose = f"{gem}_glowrose"
-        declare_block(rose, "minecraft:poppy", {"hardness": 0.0, "explosion_resistance": 0.0, "sounds": "minecraft:grass",
+        declare_block(rose, "minecraft:poppy", {"hardness": 0.0, "explosion_resistance": 0.0, "sounds": "minecraft:short_grass",
                                          "light": 10, "dynamic_light": True},
                       f"{title} Glowrose", extra={"suspicious_stew_effects": [["minecraft:glowing", 160]]})
         declare_block(f"potted_{rose}", "minecraft:potted_poppy", {"hardness": 0.0, "explosion_resistance": 0.0, "light": 15, "dynamic_light": True},
