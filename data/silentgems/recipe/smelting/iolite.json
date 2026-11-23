@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "experience": 1.0,
+  "ingredient": "#silentgems:ores/iolite",
+  "result": {
+    "id": "silentgems:iolite"
+  }
+}

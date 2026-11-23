@@ -1,4 +1,4 @@
-//! Silent's Gems for Horizon — the one `impl Hooks` at the crate root.
+//! Silent's Gems for Sunrise — the one `impl Hooks` at the crate root.
 //!
 //! Ported from Silent's Gems 5.2.0 (`SilentChaos512/SilentGems`, MIT), migrated from the retired
 //! `.hnmod` container to the flat SDK package (`api = "0.2"`). The package carries three slices:
@@ -27,7 +27,7 @@ use mod_api::{
 #[derive(Default)]
 struct Mod;
 
-#[mod_api::horizon_mod]
+#[mod_api::sunrise_mod]
 impl Hooks for Mod {
     /// Attach the lamp part to every lamp block the package declares.
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {

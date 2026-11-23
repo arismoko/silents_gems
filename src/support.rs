@@ -29,7 +29,7 @@ use crate::runtime;
 /// update of an unrelated block from reaching this port at all.
 pub struct Lamp;
 
-#[mod_api::horizon_part]
+#[mod_api::sunrise_part]
 impl BlockPart for Lamp {
     /// `GemLampBlock.neighborChanged`: remember the lamp for this tick's write pass.
     fn neighbor_changed(&self, _level: &mut dyn LevelTicksHost, event: &mut NeighborChangedEvent) {
@@ -114,7 +114,7 @@ pub fn on_level_tick_post(host: &mut dyn ServerHost, level: LevelRef) {
     let Some(dimension) = level.dimension().id(&*host) else {
         return;
     };
-    let waiting = take(dimension.as_str());
+    let waiting = take(dimension);
     if waiting.is_empty() {
         return;
     }
@@ -122,7 +122,7 @@ pub fn on_level_tick_post(host: &mut dyn ServerHost, level: LevelRef) {
         let Some(block) = level.block(&*host, pos) else {
             continue;
         };
-        let Some((gem, current)) = runtime::lamp_of(&block.id(&*host)) else {
+        let Some((gem, current)) = block.id(&*host).and_then(runtime::lamp_of) else {
             continue;
         };
         let powered = level.best_neighbor_signal(&*host, pos).unwrap_or(0) > 0;

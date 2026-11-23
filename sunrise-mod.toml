@@ -1,0 +1,14 @@
+# Silent's Gems for Sunrise: native code in src/ with its data/ and assets/.
+id = "silentgems"
+name = "Silent's Gems"
+version = "5.3.0"
+description = "Twenty-one gems with their ores, storage blocks and redstone gem lamps."
+authors = ["SilentChaos512"]
+license = "MIT"
+credits = "Ported to Minecraft 26.3 by AdLf0208, and to Sunrise by arismoko."
+homepage = "https://github.com/arismoko/silents_gems"
+side = "both"
+
+[native]
+game = "26.3"
+sunrise = "7cfdf81463ebb4a19705768273909f7f3f03601d"

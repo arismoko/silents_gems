@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "experience": 1.0,
+  "ingredient": "#silentgems:ores/white_diamond",
+  "result": {
+    "id": "silentgems:white_diamond"
+  }
+}

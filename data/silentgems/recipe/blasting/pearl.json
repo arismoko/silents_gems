@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:blasting",
+  "experience": 1.0,
+  "ingredient": "#silentgems:ores/pearl",
+  "result": {
+    "id": "silentgems:pearl"
+  }
+}

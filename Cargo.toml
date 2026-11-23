@@ -5,9 +5,9 @@ name = "silentgems"
 version = "5.2.1"
 edition = "2024"
 license = "MIT"
-description = "Silent's Gems for Horizon: gems, storage blocks, ores and redstone lamps"
+description = "Silent's Gems for Sunrise: gems, storage blocks, ores and redstone lamps"
 
 [dependencies]
-# The pinned SDK's API crate, fetched into .horizon/sdk/ by any `cargo horizon-mod`
+# The pinned SDK's API crate, fetched into .sunrise/sdk/ by any `cargo sunrise-mod`
 # command. The launcher builds against its own copy of the same build.
-horizon-mod-api = { path = ".horizon/sdk/api/crates/horizon-mod-api" }
+sunrise-mod-api = { path = ".sunrise/sdk/api/crates/sunrise-mod-api" }
