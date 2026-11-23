@@ -1,0 +1,10 @@
+{
+  "template": "minecraft:potted_poppy",
+  "properties": {
+    "hardness": 0.0,
+    "explosion_resistance": 0.0,
+    "light": 15,
+    "dynamic_light": true
+  },
+  "item": false
+}

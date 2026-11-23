@@ -41,6 +41,8 @@
     "silentgems:nether_opal_ore",
     "silentgems:end_opal_ore",
     "silentgems:nether_pearl_ore",
-    "silentgems:end_pearl_ore"
+    "silentgems:end_pearl_ore",
+    "silentgems:chaos_ore",
+    "silentgems:deepslate_chaos_ore"
   ]
 }

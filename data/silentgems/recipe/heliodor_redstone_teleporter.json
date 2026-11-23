@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:heliodor_teleporter",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "silentgems:heliodor_redstone_teleporter",
+    "count": 1
+  }
+}

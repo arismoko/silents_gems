@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "#silentgems:gems",
+    "minecraft:bone_meal",
+    "minecraft:bone_meal",
+    "minecraft:bone_meal"
+  ],
+  "result": {
+    "count": 8,
+    "id": "silentgems:sparkling_bone_meal"
+  }
+}

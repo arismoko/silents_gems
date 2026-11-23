@@ -20,6 +20,8 @@
     "#silentgems:ores/aquamarine",
     "#silentgems:ores/tanzanite",
     "#silentgems:ores/opal",
-    "#silentgems:ores/pearl"
+    "#silentgems:ores/pearl",
+    "#c:ores/chaos",
+    "#c:ores/silver"
   ]
 }

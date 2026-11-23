@@ -1,0 +1,12 @@
+{
+  "template": "minecraft:diamond",
+  "components": {
+    "minecraft:enchantment_glint_override": true,
+    "minecraft:lore": [
+      {
+        "translate": "item.silentgems.summon_kitty.desc",
+        "color": "gray"
+      }
+    ]
+  }
+}

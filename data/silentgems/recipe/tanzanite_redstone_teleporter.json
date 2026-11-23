@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:tanzanite_teleporter",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "silentgems:tanzanite_redstone_teleporter",
+    "count": 1
+  }
+}

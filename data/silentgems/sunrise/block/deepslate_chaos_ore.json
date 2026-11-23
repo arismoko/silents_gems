@@ -1,0 +1,10 @@
+{
+  "template": "minecraft:deepslate_diamond_ore",
+  "properties": {
+    "hardness": 6.0,
+    "explosion_resistance": 3.0,
+    "requires_tool": true,
+    "sounds": "minecraft:deepslate"
+  },
+  "item": true
+}

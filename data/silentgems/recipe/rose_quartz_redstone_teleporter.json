@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:rose_quartz_teleporter",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "silentgems:rose_quartz_redstone_teleporter",
+    "count": 1
+  }
+}

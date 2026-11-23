@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "#silentgems:glowroses/turquoise"
+  ],
+  "result": {
+    "id": "minecraft:cyan_dye",
+    "count": 1
+  }
+}

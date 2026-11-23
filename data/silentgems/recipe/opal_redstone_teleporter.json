@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:opal_teleporter",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "silentgems:opal_redstone_teleporter",
+    "count": 1
+  }
+}

@@ -41,6 +41,8 @@
     "silentgems:opal_ore",
     "silentgems:deepslate_opal_ore",
     "silentgems:pearl_ore",
-    "silentgems:deepslate_pearl_ore"
+    "silentgems:deepslate_pearl_ore",
+    "silentgems:silver_ore",
+    "silentgems:deepslate_silver_ore"
   ]
 }

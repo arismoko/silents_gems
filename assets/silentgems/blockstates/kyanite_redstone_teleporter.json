@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "triggered=false": {
+      "model": "silentgems:block/kyanite_redstone_teleporter"
+    },
+    "triggered=true": {
+      "model": "silentgems:block/kyanite_redstone_teleporter"
+    }
+  }
+}

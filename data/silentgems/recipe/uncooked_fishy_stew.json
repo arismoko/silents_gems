@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:bowl",
+    "#silentgems:stew_fish",
+    "minecraft:dried_kelp",
+    "minecraft:brown_mushroom"
+  ],
+  "result": {
+    "id": "silentgems:uncooked_fishy_stew",
+    "count": 1
+  }
+}

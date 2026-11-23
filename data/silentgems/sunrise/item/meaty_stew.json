@@ -1,0 +1,13 @@
+{
+  "template": "minecraft:bread",
+  "components": {
+    "minecraft:food": {
+      "nutrition": 12,
+      "saturation": 1.6
+    },
+    "minecraft:use_remainder": {
+      "id": "minecraft:bowl",
+      "count": 1
+    }
+  }
+}

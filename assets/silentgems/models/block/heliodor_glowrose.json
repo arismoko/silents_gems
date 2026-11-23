@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "silentgems:block/heliodor_glowrose"
+  },
+  "render_type": "minecraft:cutout"
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:peridot_teleporter",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "silentgems:peridot_redstone_teleporter",
+    "count": 1
+  }
+}

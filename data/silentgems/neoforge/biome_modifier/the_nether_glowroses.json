@@ -1,0 +1,28 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#minecraft:is_nether",
+  "features": [
+    "silentgems:the_nether/ruby_glowrose",
+    "silentgems:the_nether/carnelian_glowrose",
+    "silentgems:the_nether/topaz_glowrose",
+    "silentgems:the_nether/citrine_glowrose",
+    "silentgems:the_nether/heliodor_glowrose",
+    "silentgems:the_nether/moldavite_glowrose",
+    "silentgems:the_nether/peridot_glowrose",
+    "silentgems:the_nether/turquoise_glowrose",
+    "silentgems:the_nether/kyanite_glowrose",
+    "silentgems:the_nether/sapphire_glowrose",
+    "silentgems:the_nether/iolite_glowrose",
+    "silentgems:the_nether/alexandrite_glowrose",
+    "silentgems:the_nether/ammolite_glowrose",
+    "silentgems:the_nether/rose_quartz_glowrose",
+    "silentgems:the_nether/black_diamond_glowrose",
+    "silentgems:the_nether/white_diamond_glowrose",
+    "silentgems:the_nether/garnet_glowrose",
+    "silentgems:the_nether/aquamarine_glowrose",
+    "silentgems:the_nether/tanzanite_glowrose",
+    "silentgems:the_nether/opal_glowrose",
+    "silentgems:the_nether/pearl_glowrose"
+  ],
+  "step": "underground_ores"
+}

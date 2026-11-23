@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "/": "minecraft:gold_ingot",
+    "c": "silentgems:chaos_essence",
+    "i": "minecraft:iron_ingot"
+  },
+  "pattern": [
+    "/",
+    "i",
+    "c"
+  ],
+  "result": {
+    "count": 2,
+    "id": "silentgems:reinforced_gold_rod"
+  }
+}

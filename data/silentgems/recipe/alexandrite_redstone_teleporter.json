@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:alexandrite_teleporter",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "silentgems:alexandrite_redstone_teleporter",
+    "count": 1
+  }
+}

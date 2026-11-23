@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "triggered=false": {
+      "model": "silentgems:block/alexandrite_redstone_teleporter"
+    },
+    "triggered=true": {
+      "model": "silentgems:block/alexandrite_redstone_teleporter"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "template": "minecraft:diamond_ore",
+  "properties": {
+    "hardness": 5.0,
+    "explosion_resistance": 3.0,
+    "requires_tool": true,
+    "sounds": "minecraft:stone"
+  },
+  "item": true
+}

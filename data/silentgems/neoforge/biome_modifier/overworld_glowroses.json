@@ -1,0 +1,28 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#minecraft:is_overworld",
+  "features": [
+    "silentgems:overworld/ruby_glowrose",
+    "silentgems:overworld/carnelian_glowrose",
+    "silentgems:overworld/topaz_glowrose",
+    "silentgems:overworld/citrine_glowrose",
+    "silentgems:overworld/heliodor_glowrose",
+    "silentgems:overworld/moldavite_glowrose",
+    "silentgems:overworld/peridot_glowrose",
+    "silentgems:overworld/turquoise_glowrose",
+    "silentgems:overworld/kyanite_glowrose",
+    "silentgems:overworld/sapphire_glowrose",
+    "silentgems:overworld/iolite_glowrose",
+    "silentgems:overworld/alexandrite_glowrose",
+    "silentgems:overworld/ammolite_glowrose",
+    "silentgems:overworld/rose_quartz_glowrose",
+    "silentgems:overworld/black_diamond_glowrose",
+    "silentgems:overworld/white_diamond_glowrose",
+    "silentgems:overworld/garnet_glowrose",
+    "silentgems:overworld/aquamarine_glowrose",
+    "silentgems:overworld/tanzanite_glowrose",
+    "silentgems:overworld/opal_glowrose",
+    "silentgems:overworld/pearl_glowrose"
+  ],
+  "step": "underground_ores"
+}

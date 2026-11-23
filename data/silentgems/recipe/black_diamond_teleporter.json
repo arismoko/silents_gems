@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "c": "silentgems:chaos_essence_block",
+    "e": "minecraft:ender_pearl",
+    "g": "#c:gems/black_diamond",
+    "i": "minecraft:gold_ingot"
+  },
+  "pattern": [
+    "igi",
+    "gcg",
+    " e "
+  ],
+  "result": {
+    "count": 2,
+    "id": "silentgems:black_diamond_teleporter"
+  }
+}

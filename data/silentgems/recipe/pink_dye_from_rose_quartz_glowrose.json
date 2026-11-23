@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "#silentgems:glowroses/rose_quartz"
+  ],
+  "result": {
+    "id": "minecraft:pink_dye",
+    "count": 1
+  }
+}

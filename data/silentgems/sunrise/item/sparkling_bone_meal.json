@@ -1,0 +1,11 @@
+{
+  "template": "minecraft:diamond",
+  "components": {
+    "minecraft:lore": [
+      {
+        "translate": "item.silentgems.sparkling_bone_meal.desc",
+        "color": "gray"
+      }
+    ]
+  }
+}

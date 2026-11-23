@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:citrine_teleporter",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "silentgems:citrine_redstone_teleporter",
+    "count": 1
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "template": "minecraft:bread",
+  "components": {
+    "minecraft:food": {
+      "nutrition": 6,
+      "saturation": 0.7
+    },
+    "minecraft:use_remainder": {
+      "id": "minecraft:stick",
+      "count": 1
+    },
+    "minecraft:lore": [
+      {
+        "translate": "item.silentgems.potato_on_a_stick.desc",
+        "color": "gray"
+      }
+    ]
+  }
+}

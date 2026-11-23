@@ -1,0 +1,17 @@
+{
+  "template": "minecraft:poppy",
+  "properties": {
+    "hardness": 0.0,
+    "explosion_resistance": 0.0,
+    "sounds": "minecraft:grass",
+    "light": 10,
+    "dynamic_light": true
+  },
+  "item": true,
+  "suspicious_stew_effects": [
+    [
+      "minecraft:glowing",
+      160
+    ]
+  ]
+}

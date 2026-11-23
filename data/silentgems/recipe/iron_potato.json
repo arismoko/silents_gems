@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "#": "minecraft:iron_block",
+    "/": "#c:gems",
+    "p": "minecraft:potato"
+  },
+  "pattern": [
+    "/#/",
+    "#p#",
+    "/#/"
+  ],
+  "result": {
+    "id": "silentgems:iron_potato",
+    "count": 1
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "silentgems:block/ammolite_glowrose"
+  },
+  "render_type": "minecraft:cutout"
+}

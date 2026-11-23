@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:aquamarine_teleporter",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "silentgems:aquamarine_redstone_teleporter",
+    "count": 1
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:moldavite_teleporter",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "silentgems:moldavite_redstone_teleporter",
+    "count": 1
+  }
+}

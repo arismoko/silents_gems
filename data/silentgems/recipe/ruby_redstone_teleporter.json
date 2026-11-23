@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:ruby_teleporter",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "silentgems:ruby_redstone_teleporter",
+    "count": 1
+  }
+}

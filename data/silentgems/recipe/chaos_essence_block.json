@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "silentgems:chaos_essence_block"
+  ],
+  "result": {
+    "count": 9,
+    "id": "silentgems:chaos_essence"
+  }
+}
