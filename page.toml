@@ -19,5 +19,13 @@ Differences from the original:
 categories = ["decoration", "worldgen"]
 
 [[screenshots]]
-path = "page/world.png"
-caption = "Gem blocks, ores and lit gem lamps."
+path = "page/blocks-and-ores.png"
+caption = "Gem blocks, stone and deepslate ores, and two lever-switched lamps."
+
+[[screenshots]]
+path = "page/lamp-row.png"
+caption = "Eight gem lamps lit by redstone at midnight."
+
+[[screenshots]]
+path = "page/generated-ruby-ore.png"
+caption = "A ruby vein generated in deepslate."
