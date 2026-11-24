@@ -5,10 +5,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use mod_api::{
-    self, AttachmentCodec, AttachmentType, BlockPart, BlockUpdateFlags, Component, Compound,
-    EntityTickListenedEvent, EntityTickPostEvent, Hand, Host, HostSide, InteractionResult,
-    ItemPart, ItemStack, LevelRef, LevelSide, LevelWriteHost, LightEmissionEvent, MayPlaceOnEvent,
-    NeighborChangedEvent, Registrar, ServerHost, SettingSpec, Tag, UseOnEvent, UseWithoutItemEvent,
+    self, AttachmentCodec, AttachmentType, BlockPart, BlockState, BlockUpdateFlags, Component,
+    Compound, EntityTickListenedEvent, EntityTickPostEvent, Hand, Host, HostSide,
+    InteractionResult, ItemPart, ItemStack, LevelRef, LevelSide, LevelWriteHost,
+    LightEmissionEvent, MayPlaceOnEvent, NeighborChangedEvent, PlacementSource, Registrar,
+    RotateEvent, ServerHost, SettingSpec, StateForPlacementEvent, StructureRotation, Tag,
+    UseOnEvent, UseWithoutItemEvent, WorldgenHost,
 };
 
 use crate::rules::{self, Destinations, DimPos, LinkClick};
@@ -234,6 +236,62 @@ impl BlockPart for GemGlass {
     }
 }
 
+/// The horizontal directions in turning order, clockwise from north.
+const HORIZONTAL: [&str; 4] = ["north", "east", "south", "west"];
+
+/// `BlockPlaceContext.getHorizontalDirection`: a player's facing (`Direction.fromYRot`), or a
+/// directional context's own direction, north when it is vertical.
+fn horizontal_facing(source: &PlacementSource) -> Option<&'static str> {
+    Some(match *source {
+        PlacementSource::Player { yaw, .. } => {
+            match ((f64::from(yaw) / 90.0 + 0.5).floor() as i64).rem_euclid(4) {
+                0 => "south",
+                1 => "west",
+                2 => "north",
+                _ => "east",
+            }
+        }
+        PlacementSource::Directional { direction } => match direction {
+            mod_api::Direction::East => "east",
+            mod_api::Direction::South => "south",
+            mod_api::Direction::West => "west",
+            _ => "north",
+        },
+        _ => return None,
+    })
+}
+
+/// `AbstractTeleporterBlock.getStateForPlacement`: the default state facing the placer's way.
+fn teleporter_placement(
+    level: LevelSide,
+    event: &StateForPlacementEvent<'_>,
+) -> Option<Option<BlockState>> {
+    let (LevelSide::Server(level) | LevelSide::Client(level)) = level;
+    let facing = horizontal_facing(&event.context.source)?;
+    Some(level.state_with_property(event.state, "facing", facing))
+}
+
+/// `AbstractTeleporterBlock.rotate`: `rotation.rotate(facing)`.
+fn teleporter_rotate(context: &dyn WorldgenHost, event: &mut RotateEvent<'_>) {
+    let turns = match event.rotation {
+        StructureRotation::Clockwise90 => 1,
+        StructureRotation::Clockwise180 => 2,
+        StructureRotation::Counterclockwise90 => 3,
+        _ => return,
+    };
+    let Some(now) = HORIZONTAL
+        .iter()
+        .position(|f| context.state_with_property(event.state, "facing", f) == Some(event.state))
+    else {
+        return;
+    };
+    if let Some(state) =
+        context.state_with_property(event.state, "facing", HORIZONTAL[(now + turns) % 4])
+    {
+        *event.rotated = state;
+    }
+}
+
 /// A teleporter and the anchor: a click sends the clicker to the saved destination.
 pub struct Teleporter {
     /// The anchor takes no click of its own (`TeleporterAnchorBlock.useWithoutItem`).
@@ -262,6 +320,18 @@ impl BlockPart for Teleporter {
         }
         Some(InteractionResult::Success)
     }
+
+    fn state_for_placement(
+        &self,
+        level: LevelSide,
+        event: &mut StateForPlacementEvent<'_>,
+    ) -> Option<Option<BlockState>> {
+        teleporter_placement(level, event)
+    }
+
+    fn rotate(&self, context: &dyn WorldgenHost, event: &mut RotateEvent<'_>) {
+        teleporter_rotate(context, event);
+    }
 }
 
 /// A redstone teleporter: sends everything within five blocks when a signal arrives.
@@ -275,6 +345,18 @@ impl BlockPart for RedstoneTeleporter {
         event: &mut UseWithoutItemEvent<'_>,
     ) -> Option<InteractionResult> {
         Teleporter { anchor: false }.use_without_item(host, event)
+    }
+
+    fn state_for_placement(
+        &self,
+        level: LevelSide,
+        event: &mut StateForPlacementEvent<'_>,
+    ) -> Option<Option<BlockState>> {
+        teleporter_placement(level, event)
+    }
+
+    fn rotate(&self, context: &dyn WorldgenHost, event: &mut RotateEvent<'_>) {
+        teleporter_rotate(context, event);
     }
 
     /// `GemRedstoneTeleporterBlock.neighborChanged`: remember the block for this tick's pass, as
@@ -817,4 +899,30 @@ fn teleport_nearby(host: &mut dyn ServerHost, level: LevelRef, pos: [i32; 3]) {
 /// A world closed: what was queued for it never lands in the next one opened in this session.
 pub fn clear_pending() {
     *queue().lock_pending() = Pending::default();
+}
+
+#[cfg(test)]
+mod facing_tests {
+    use super::*;
+
+    #[test]
+    fn placement_faces_where_the_player_looks() {
+        let facing = |yaw| {
+            horizontal_facing(&PlacementSource::Player {
+                yaw,
+                pitch: 0.0,
+                sneaking: false,
+            })
+        };
+        assert_eq!(facing(0.0), Some("south"));
+        assert_eq!(facing(90.0), Some("west"));
+        assert_eq!(facing(180.0), Some("north"));
+        assert_eq!(facing(-90.0), Some("east"));
+        assert_eq!(facing(44.9), Some("south"));
+        assert_eq!(facing(45.0), Some("west"));
+        let up = PlacementSource::Directional {
+            direction: mod_api::Direction::Up,
+        };
+        assert_eq!(horizontal_facing(&up), Some("north"));
+    }
 }

@@ -19,7 +19,8 @@ A port of [Silent's Gems](https://github.com/SilentChaos512/SilentGems) by Silen
 
 ## Differences from the original
 
-- Silent Gear integration is not ported. A teleporter does not turn to face the way it was placed (its model is the same on every side).
+- Silent Gear integration is not ported.
+- A teleporter placed in a mirrored structure keeps its facing: a block can't answer the mirror step yet ([sunrise-org/sunrise#5314](https://github.com/sunrise-org/sunrise/issues/5314)). Placing and rotating turn it as in the original.
 - Glowroses and the rabbit coffee read their light and timer from the mod's settings rather than a config file.
 - A lamp just placed where it reads a signal switches at the end of that tick, not within the placement; a signal change switches it at once ([sunrise-org/sunrise#5302](https://github.com/sunrise-org/sunrise/issues/5302)).
 - A redstone teleporter sends the entities around it at the end of the tick its signal arrives, not within the redstone update ([sunrise-org/sunrise#5303](https://github.com/sunrise-org/sunrise/issues/5303)).

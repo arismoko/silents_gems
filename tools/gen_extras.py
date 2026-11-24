@@ -226,6 +226,15 @@ def main() -> None:
     })
 
     # ---- glowroses and their pots; teleporters
+    # AbstractTeleporterBlock: FACING (horizontal) and TRIGGERED on every teleporter and the
+    # anchor, default north and false; the blockstates turn the model by facing.
+    TELEPORTER_STATE = {
+        "state_properties": {
+            "facing": {"type": "enum", "values": ["north", "south", "west", "east"]},
+            "triggered": {"type": "boolean"},
+        },
+        "default_state": {"facing": "north", "triggered": "false"},
+    }
     anchor_title = "Teleporter Anchor"
     for gem, title, *_ in GEMS:
         rose = f"{gem}_glowrose"
@@ -254,21 +263,17 @@ def main() -> None:
         for kind, label in (("teleporter", "Teleporter"), ("redstone_teleporter", "Redstone Teleporter")):
             name = f"{gem}_{kind}"
             props = {"hardness": 5.0, "explosion_resistance": 5.0, "requires_tool": False, "sounds": "minecraft:iron_block"}
-            extra = {"state_properties": {"triggered": {"type": "boolean"}}} if kind == "redstone_teleporter" else None
-            declare_block(name, "minecraft:iron_block", props, f"{title} {label}", extra=extra)
+            declare_block(name, "minecraft:iron_block", props, f"{title} {label}", extra=TELEPORTER_STATE)
             model = read(gen / f"assets/silentgems/models/block/{name}.json")
             write(assets / f"models/block/{name}.json", model)
             copy_asset(f"items/{name}.json")
-            state = {"model": f"silentgems:block/{name}"}
-            write(assets / f"blockstates/{name}.json",
-                  {"variants": {"triggered=false": state, "triggered=true": state}} if extra else {"variants": {"": state}})
+            copy_asset(f"blockstates/{name}.json")
             copy_loot(name)
             copy_recipe(name)
     declare_block("teleporter_anchor", "minecraft:iron_block",
                   {"hardness": 5.0, "explosion_resistance": 3.0, "requires_tool": True, "sounds": "minecraft:iron_block"},
-                  anchor_title)
-    write(assets / "blockstates/teleporter_anchor.json", {"variants": {"": {"model": "silentgems:block/teleporter_anchor"}}})
-    for sub in ("models/block/teleporter_anchor.json", "items/teleporter_anchor.json"):
+                  anchor_title, extra=TELEPORTER_STATE)
+    for sub in ("blockstates/teleporter_anchor.json", "models/block/teleporter_anchor.json", "items/teleporter_anchor.json"):
         copy_asset(sub)
     for sub in ("cube_overlay", "cube_overlay_all", "teleporter"):
         shutil.copyfile(main_assets / f"models/block/{sub}.json", assets / f"models/block/{sub}.json")

@@ -1,7 +1,19 @@
 {
   "variants": {
-    "": {
+    "facing=east": {
+      "model": "silentgems:block/teleporter_anchor",
+      "y": 90
+    },
+    "facing=north": {
       "model": "silentgems:block/teleporter_anchor"
+    },
+    "facing=south": {
+      "model": "silentgems:block/teleporter_anchor",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "silentgems:block/teleporter_anchor",
+      "y": 270
     }
   }
 }

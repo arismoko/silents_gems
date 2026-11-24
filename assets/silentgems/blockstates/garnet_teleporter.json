@@ -1,7 +1,19 @@
 {
   "variants": {
-    "": {
+    "facing=east": {
+      "model": "silentgems:block/garnet_teleporter",
+      "y": 90
+    },
+    "facing=north": {
       "model": "silentgems:block/garnet_teleporter"
+    },
+    "facing=south": {
+      "model": "silentgems:block/garnet_teleporter",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "silentgems:block/garnet_teleporter",
+      "y": 270
     }
   }
 }

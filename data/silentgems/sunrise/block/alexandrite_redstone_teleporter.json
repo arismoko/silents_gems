@@ -8,8 +8,21 @@
   },
   "item": true,
   "state_properties": {
+    "facing": {
+      "type": "enum",
+      "values": [
+        "north",
+        "south",
+        "west",
+        "east"
+      ]
+    },
     "triggered": {
       "type": "boolean"
     }
+  },
+  "default_state": {
+    "facing": "north",
+    "triggered": "false"
   }
 }
