@@ -20,8 +20,8 @@ pub mod runtime;
 pub mod support;
 
 use mod_api::{
-    self, BlockChangedEvent, EntityTickListenedEvent, EntityTickPostEvent, Hooks, HostSide,
-    LevelHost, LevelTickPostEvent, Registrar, RegistrationContext, ServerHost, ServerStoppedEvent,
+    self, BlockChangedEvent, EntityTickPostEvent, Hooks, HostSide, LevelHost, LevelTickPostEvent,
+    Registrar, RegistrationContext, ServerHost, ServerStoppedEvent,
 };
 
 /// The SDK's one `Default` session instance; the queue lives behind the lock in [`support`],
@@ -41,11 +41,6 @@ impl Hooks for Mod {
     fn server_stopped(&self, _: &mut dyn ServerHost, _: &mut ServerStoppedEvent) {
         features::clear_pending();
         support::clear_queue();
-    }
-
-    /// Rabbit coffee needs every entity's tick told.
-    fn entity_tick_listened(&self, host: HostSide, event: &mut EntityTickListenedEvent) {
-        features::on_tick_listened(host, event);
     }
 
     /// After entities tick: each rabbit counts its coffee timer.

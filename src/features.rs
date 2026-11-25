@@ -2,58 +2,64 @@
 //! meal, the pet summoners, the teleporters and their linker. The rules are in [`crate::rules`].
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::{Mutex, MutexGuard, OnceLock};
+use std::sync::{Mutex, MutexGuard, OnceLock, RwLock};
 
 use mod_api::{
-    self, AttachmentCodec, AttachmentType, BlockPart, BlockState, BlockUpdateFlags, Component,
-    Compound, EntityTickListenedEvent, EntityTickPostEvent, Hand, Host, HostSide,
+    self, AttachmentCodec, AttachmentDescriptor, AttachmentKey, BlockPart, BlockState,
+    BlockUpdateFlags, Component, Compound, EntityTickPostEvent, Hand, Host, HostSide,
     InteractionResult, ItemPart, ItemStack, LevelRef, LevelSide, LevelWriteHost,
     LightEmissionEvent, MayPlaceOnEvent, NeighborChangedEvent, PlacementSource, Registrar,
-    RotateEvent, ServerHost, SettingSpec, StateForPlacementEvent, StructureRotation, Tag,
-    UseOnEvent, UseWithoutItemEvent, WorldgenHost,
+    RotateEvent, ServerHost, SettingKey, SettingSpec, StateForPlacementEvent, StructureRotation,
+    Tag, UseOnEvent, UseWithoutItemEvent, WorldgenHost,
 };
 
 use crate::rules::{self, Destinations, DimPos, LinkClick};
 use crate::runtime::GEMS;
 
-const MOD_ID: &str = "silentgems";
 const GLOWROSE_LIGHT: &str = "glowrose_light";
 const POTTED_LIGHT: &str = "potted_glowrose_light";
 const RABBIT_COFFEE: &str = "rabbits_produce_coffee";
 const RABBIT_DELAY: &str = "rabbit_coffee_delay_minutes";
 
 /// The coffee timer `GemsAttachmentTypes.COFFEE_TIMER` keeps on a producer, saved with it.
-static COFFEE_TIMER: AttachmentType<i64> = AttachmentType {
-    namespace: MOD_ID,
-    name: "coffee_timer",
-    default: || 0,
-    codec: Some(AttachmentCodec {
-        encode: |value| {
-            let mut out = Compound::new();
-            out.insert("coffee_timer".into(), Tag::Long(*value));
-            Ok(out)
-        },
-        decode: |saved| match saved.get(&"coffee_timer".into()) {
-            Some(Tag::Long(value)) => Ok(*value),
-            _ => Err(mod_api::AttachmentError::Decode),
-        },
-    }),
-    copy_on_death: false,
-    sync: false,
-};
+/// The key is issued at registration and replaced on each registration pass.
+static COFFEE_TIMER: RwLock<Option<AttachmentKey<i64>>> = RwLock::new(None);
 
 /// Where each of a level's teleporters sends, kept on the level that holds them.
-static DESTINATIONS: AttachmentType<Destinations> = AttachmentType {
-    namespace: MOD_ID,
-    name: "teleporter_destinations",
-    default: Destinations::default,
-    codec: Some(AttachmentCodec {
-        encode: |value| Ok(value.to_nbt()),
-        decode: |saved| Ok(Destinations::from_nbt(saved)),
-    }),
-    copy_on_death: false,
-    sync: false,
-};
+static DESTINATIONS: RwLock<Option<AttachmentKey<Destinations>>> = RwLock::new(None);
+
+/// The key a registration pass issued, if it is bound.
+fn issued<T: 'static>(slot: &RwLock<Option<AttachmentKey<T>>>) -> Option<AttachmentKey<T>> {
+    slot.read().ok()?.clone()
+}
+
+/// The owner-bound keys of the mod's settings, issued at registration.
+#[derive(Clone, Copy, Default)]
+struct Settings {
+    glowrose_light: Option<SettingKey>,
+    potted_light: Option<SettingKey>,
+    rabbit_coffee: Option<SettingKey>,
+    rabbit_delay: Option<SettingKey>,
+}
+
+static SETTINGS: RwLock<Settings> = RwLock::new(Settings {
+    glowrose_light: None,
+    potted_light: None,
+    rabbit_coffee: None,
+    rabbit_delay: None,
+});
+
+fn settings() -> Settings {
+    SETTINGS
+        .read()
+        .map(|settings| *settings)
+        .unwrap_or_default()
+}
+
+/// A range setting's live number, `None` when it is not registered or cannot be read.
+fn range_setting(host: &dyn Host, key: Option<SettingKey>) -> Option<f64> {
+    host.setting_f64(key?).ok()
+}
 
 /// `minecraft:custom_data`, where the linker keeps its stored position
 /// (`GemsDataComponents.LINKED_POS`).
@@ -109,7 +115,7 @@ impl BlockPart for Glowrose {
     /// `GlowroseBlock.getLightEmission`.
     fn light_emission(&self, host: &dyn Host, _: &mut LightEmissionEvent) -> Option<u8> {
         Some(rules::light_level(
-            host.setting(MOD_ID, GLOWROSE_LIGHT).as_deref(),
+            range_setting(host, settings().glowrose_light),
             rules::GLOWROSE_LIGHT_DEFAULT,
         ))
     }
@@ -139,7 +145,7 @@ fn rose_item_of_potted(block: &str) -> Option<mod_api::ItemKey> {
 impl BlockPart for PottedGlowrose {
     fn light_emission(&self, host: &dyn Host, _: &mut LightEmissionEvent) -> Option<u8> {
         Some(rules::light_level(
-            host.setting(MOD_ID, POTTED_LIGHT).as_deref(),
+            range_setting(host, settings().potted_light),
             rules::POTTED_LIGHT_DEFAULT,
         ))
     }
@@ -147,9 +153,12 @@ impl BlockPart for PottedGlowrose {
     /// `FlowerPotBlock.useWithoutItem`: the plant comes out and the pot is empty again.
     fn use_without_item(
         &self,
-        host: &mut dyn ServerHost,
+        host: HostSide<'_>,
         event: &mut UseWithoutItemEvent<'_>,
     ) -> Option<InteractionResult> {
+        let HostSide::Server(host) = host else {
+            return None;
+        };
         let click = event.click;
         let level = host.level(click.dimension.key().id())?;
         let block = level.block(&*host, click.pos)?.id(&*host)?.to_owned();
@@ -189,9 +198,12 @@ pub struct EmptyPot;
 impl BlockPart for EmptyPot {
     fn use_item_on(
         &self,
-        host: &mut dyn ServerHost,
+        host: HostSide<'_>,
         event: &mut mod_api::UseItemOnEvent<'_>,
     ) -> Option<InteractionResult> {
+        let HostSide::Server(host) = host else {
+            return None;
+        };
         let click = event.click;
         let stack = click.stack?;
         let (_, potted) = ROSES
@@ -303,7 +315,7 @@ impl BlockPart for Teleporter {
     /// `AbstractTeleporterBlock.useWithoutItem`.
     fn use_without_item(
         &self,
-        host: &mut dyn ServerHost,
+        host: HostSide<'_>,
         event: &mut UseWithoutItemEvent<'_>,
     ) -> Option<InteractionResult> {
         if self.anchor {
@@ -313,6 +325,9 @@ impl BlockPart for Teleporter {
         if click.stack.is_some_and(is_linker) {
             return Some(InteractionResult::Pass);
         }
+        let HostSide::Server(host) = host else {
+            return None;
+        };
         let level = host.level(click.dimension.key().id())?;
         if let Some(destination) = destination_of(host, click.pos) {
             let player = host.entity(u32::try_from(click.player_entity_id).ok()?)?;
@@ -341,7 +356,7 @@ pub struct RedstoneTeleporter;
 impl BlockPart for RedstoneTeleporter {
     fn use_without_item(
         &self,
-        host: &mut dyn ServerHost,
+        host: HostSide<'_>,
         event: &mut UseWithoutItemEvent<'_>,
     ) -> Option<InteractionResult> {
         Teleporter { anchor: false }.use_without_item(host, event)
@@ -385,10 +400,9 @@ static CUP: OnceLock<mod_api::ItemKey> = OnceLock::new();
 static LINKER: OnceLock<mod_api::ItemKey> = OnceLock::new();
 
 fn destination_of(host: &mut dyn ServerHost, pos: [i32; 3]) -> Option<DimPos> {
-    let all = DESTINATIONS
-        .get(host.attachments(), mod_api::Holder::Level)
-        .ok()?;
-    all.0.get(&pos).cloned()
+    issued(&DESTINATIONS)?
+        .get(host, mod_api::Holder::Level, |all| all.0.get(&pos).cloned())
+        .ok()?
 }
 
 /// Queue a destination for the level that holds the teleporter, which may not be the one in place:
@@ -649,37 +663,75 @@ fn queue() -> &'static Queue {
 
 /// Declare the settings, the attachment types and every part.
 pub fn declare(r: &mut dyn Registrar) {
-    let _ = r.register_setting(SettingSpec::range(
-        GLOWROSE_LIGHT,
-        "silentgems.configuration.glowrose",
-        0.0,
-        15.0,
-        1.0,
-        rules::GLOWROSE_LIGHT_DEFAULT,
-    ));
-    let _ = r.register_setting(SettingSpec::range(
-        POTTED_LIGHT,
-        "silentgems.configuration.pottedGlowrose",
-        0.0,
-        15.0,
-        1.0,
-        rules::POTTED_LIGHT_DEFAULT,
-    ));
-    let _ = r.register_setting(SettingSpec::toggle(
-        RABBIT_COFFEE,
-        "silentgems.configuration.rabbitsProduceCoffee",
-        true,
-    ));
-    let _ = r.register_setting(SettingSpec::range(
-        RABBIT_DELAY,
-        "silentgems.configuration.rabbitCoffeeDelay",
-        rules::COFFEE_DELAY_MINUTES_RANGE.0,
-        rules::COFFEE_DELAY_MINUTES_RANGE.1,
-        1.0,
-        rules::COFFEE_DELAY_MINUTES_DEFAULT,
-    ));
-    let _ = r.register_attachment_type("silentgems:coffee_timer", false);
-    let _ = r.register_attachment_type("silentgems:teleporter_destinations", false);
+    let bound = Settings {
+        glowrose_light: r
+            .register_setting(SettingSpec::range(
+                GLOWROSE_LIGHT,
+                "silentgems.configuration.glowrose",
+                0.0,
+                15.0,
+                1.0,
+                rules::GLOWROSE_LIGHT_DEFAULT,
+            ))
+            .ok(),
+        potted_light: r
+            .register_setting(SettingSpec::range(
+                POTTED_LIGHT,
+                "silentgems.configuration.pottedGlowrose",
+                0.0,
+                15.0,
+                1.0,
+                rules::POTTED_LIGHT_DEFAULT,
+            ))
+            .ok(),
+        rabbit_coffee: r
+            .register_setting(SettingSpec::toggle(
+                RABBIT_COFFEE,
+                "silentgems.configuration.rabbitsProduceCoffee",
+                true,
+            ))
+            .ok(),
+        rabbit_delay: r
+            .register_setting(SettingSpec::range(
+                RABBIT_DELAY,
+                "silentgems.configuration.rabbitCoffeeDelay",
+                rules::COFFEE_DELAY_MINUTES_RANGE.0,
+                rules::COFFEE_DELAY_MINUTES_RANGE.1,
+                1.0,
+                rules::COFFEE_DELAY_MINUTES_DEFAULT,
+            ))
+            .ok(),
+    };
+    if let Ok(mut slot) = SETTINGS.write() {
+        *slot = bound;
+    }
+    let coffee =
+        AttachmentDescriptor::new("silentgems:coffee_timer", || 0i64).serialize(AttachmentCodec {
+            encode: |value| {
+                let mut out = Compound::new();
+                out.insert("coffee_timer".into(), Tag::Long(*value));
+                Ok(out)
+            },
+            decode: |saved| match saved.get(&"coffee_timer".into()) {
+                Some(Tag::Long(value)) => Ok(*value),
+                _ => Err(mod_api::AttachmentError::Decode),
+            },
+        });
+    if let (Ok(key), Ok(mut slot)) = (r.register_attachment_type(coffee), COFFEE_TIMER.write()) {
+        *slot = Some(key);
+    }
+    let destinations =
+        AttachmentDescriptor::new("silentgems:teleporter_destinations", Destinations::default)
+            .serialize(AttachmentCodec {
+                encode: |value| Ok(value.to_nbt()),
+                decode: |saved| Ok(Destinations::from_nbt(saved)),
+            });
+    if let (Ok(key), Ok(mut slot)) = (
+        r.register_attachment_type(destinations),
+        DESTINATIONS.write(),
+    ) {
+        *slot = Some(key);
+    }
 
     for gem in GEMS {
         let rose = r.block_key(&format!("silentgems:{}_glowrose", gem.name));
@@ -730,53 +782,52 @@ pub fn declare(r: &mut dyn Registrar) {
     );
 }
 
-/// `entity_tick_listened`: the rabbit coffee needs every entity's tick told.
-pub fn on_tick_listened(_: HostSide, event: &mut EntityTickListenedEvent) {
-    event.listened = true;
-}
-
 /// `GemsEvents.handleCoffeeTimerTicks`: each coffee producer counts its timer and drops a cup.
 pub fn on_entity_tick_post(host: HostSide, event: &mut EntityTickPostEvent<'_>) {
     let HostSide::Server(host) = host else {
         return;
     };
-    if host.setting(MOD_ID, RABBIT_COFFEE).as_deref() == Some("false") {
+    if event.kind != "minecraft:rabbit" {
         return;
     }
-    let delay = rules::coffee_delay_ticks(host.setting(MOD_ID, RABBIT_DELAY).as_deref());
-    for (&id, &kind) in event.entities.iter().zip(event.kinds) {
-        if kind != "minecraft:rabbit" {
-            continue;
+    let settings = settings();
+    if let Some(key) = settings.rabbit_coffee
+        && matches!(host.setting_bool(key), Ok(false))
+    {
+        return;
+    }
+    let delay = rules::coffee_delay_ticks(range_setting(&*host, settings.rabbit_delay));
+    let Some(timer_key) = issued(&COFFEE_TIMER) else {
+        return;
+    };
+    let Some(rabbit) = host.entity(event.entity) else {
+        return;
+    };
+    let holder = mod_api::Holder::Entity(rabbit.id());
+    let Ok(timer) = timer_key.get(&mut *host, holder, |timer| *timer) else {
+        return;
+    };
+    let (next, drops) = rules::coffee_step(timer, delay);
+    let _ = timer_key.set(&mut *host, holder, next);
+    if drops {
+        let Some(cup) = CUP.get() else {
+            return;
+        };
+        if let Some(stack) = ItemStack::new(*cup, 1) {
+            let _ = rabbit.spawn_at_location(host, stack, 0.0);
         }
-        let Some(rabbit) = host.entity(id) else {
-            continue;
-        };
-        let holder = mod_api::Holder::Entity(rabbit.id());
-        let Ok(timer) = COFFEE_TIMER.get(host.attachments(), holder) else {
-            continue;
-        };
-        let (next, drops) = rules::coffee_step(timer, delay);
-        let _ = COFFEE_TIMER.set(host.attachments(), holder, next);
-        if drops {
-            let Some(cup) = CUP.get() else {
-                continue;
-            };
-            if let Some(stack) = ItemStack::new(*cup, 1) {
-                let _ = rabbit.spawn_at_location(host, stack, 0.0);
-            }
-            if let Some(level) = host.level(event.dimension)
-                && let Some(at) = rabbit.position(&*host)
-            {
-                level.play_sound(
-                    host,
-                    "minecraft:block.froglight.step",
-                    at,
-                    mod_api::SoundSource::Neutral,
-                    1.0,
-                    1.0,
-                    None,
-                );
-            }
+        if let Some(level) = host.level(event.dimension)
+            && let Some(at) = rabbit.position(&*host)
+        {
+            level.play_sound(
+                host,
+                "minecraft:block.froglight.step",
+                at,
+                mod_api::SoundSource::Neutral,
+                1.0,
+                1.0,
+                None,
+            );
         }
     }
 }
@@ -802,9 +853,11 @@ pub fn on_level_tick_post(host: &mut dyn ServerHost, level: LevelRef) {
     };
     if let Some(sets) = sets {
         let holder = mod_api::Holder::Level;
-        if let Ok(mut all) = DESTINATIONS.get(host.attachments(), holder) {
+        if let Some(key) = issued(&DESTINATIONS)
+            && let Ok(mut all) = key.get(&mut *host, holder, Clone::clone)
+        {
             all.0.extend(sets);
-            let _ = DESTINATIONS.set(host.attachments(), holder, all);
+            let _ = key.set(&mut *host, holder, all);
         }
     }
     for pos in redstone.unwrap_or_default() {
@@ -825,15 +878,20 @@ fn redstone_pass(host: &mut dyn ServerHost, level: LevelRef, pos: [i32; 3]) {
     let above = [pos[0], pos[1] + 1, pos[2]];
     let powered =
         level.has_neighbor_signal(&*host, pos) || level.has_neighbor_signal(&*host, above);
-    let triggered = level.block_property(&*host, pos, "triggered").as_deref() == Some("true");
+    let triggered = level.block_property(&*host, pos, "triggered") == Some("true");
     if powered == triggered {
         return;
     }
     if powered {
         teleport_nearby(host, level, pos);
     }
-    let _ =
-        host.set_block_property_with(pos, "triggered", if powered { "true" } else { "false" }, 2);
+    let _ = level.set_block_property(
+        host,
+        pos,
+        "triggered",
+        if powered { "true" } else { "false" },
+        BlockUpdateFlags::CLIENTS,
+    );
 }
 
 /// `tryTeleportNearbyEntities`: everything within five blocks goes to the destination.
