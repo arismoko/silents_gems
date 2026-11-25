@@ -21,17 +21,14 @@ pub const COFFEE_DELAY_MINUTES_RANGE: (f64, f64) = (1.0, 1440.0);
 const TICKS_PER_MINUTE: i64 = 1200;
 
 /// A light setting as a block light level, 0 to 15 (`defineInRange("glowrose.normalLight", 10, 0, 15)`).
-pub fn light_level(setting: Option<&str>, default: f64) -> u8 {
-    let value = setting
-        .and_then(|text| text.trim().parse::<f64>().ok())
-        .unwrap_or(default);
+pub fn light_level(setting: Option<f64>, default: f64) -> u8 {
+    let value = setting.unwrap_or(default);
     value.round().clamp(0.0, 15.0) as u8
 }
 
 /// The rabbit coffee delay setting, in ticks.
-pub fn coffee_delay_ticks(setting: Option<&str>) -> i64 {
+pub fn coffee_delay_ticks(setting: Option<f64>) -> i64 {
     let minutes = setting
-        .and_then(|text| text.trim().parse::<f64>().ok())
         .unwrap_or(COFFEE_DELAY_MINUTES_DEFAULT)
         .clamp(COFFEE_DELAY_MINUTES_RANGE.0, COFFEE_DELAY_MINUTES_RANGE.1);
     minutes.round() as i64 * TICKS_PER_MINUTE
@@ -224,17 +221,17 @@ mod tests {
     #[test]
     fn light_settings_clamp_to_block_light() {
         assert_eq!(light_level(None, GLOWROSE_LIGHT_DEFAULT), 10);
-        assert_eq!(light_level(Some("15"), 10.0), 15);
-        assert_eq!(light_level(Some("99"), 10.0), 15);
-        assert_eq!(light_level(Some("-3"), 10.0), 0);
-        assert_eq!(light_level(Some("junk"), 15.0), 15);
+        assert_eq!(light_level(Some(15.0), 10.0), 15);
+        assert_eq!(light_level(Some(99.0), 10.0), 15);
+        assert_eq!(light_level(Some(-3.0), 10.0), 0);
+        assert_eq!(light_level(None, 15.0), 15);
     }
 
     #[test]
     fn coffee_delay_is_minutes_in_range() {
         assert_eq!(coffee_delay_ticks(None), 12_000);
-        assert_eq!(coffee_delay_ticks(Some("0")), 1_200);
-        assert_eq!(coffee_delay_ticks(Some("100000")), 1_728_000);
+        assert_eq!(coffee_delay_ticks(Some(0.0)), 1_200);
+        assert_eq!(coffee_delay_ticks(Some(100000.0)), 1_728_000);
     }
 
     #[test]
