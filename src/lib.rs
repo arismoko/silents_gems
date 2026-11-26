@@ -20,8 +20,8 @@ pub mod runtime;
 pub mod support;
 
 use mod_api::{
-    self, BlockChangedEvent, EntityTickPostEvent, Hooks, HostSide, LevelHost, LevelTickPostEvent,
-    Registrar, RegistrationContext, ServerHost, ServerStoppedEvent,
+    self, EntityTickPostEvent, Hooks, HostSide, LevelTickPostEvent, Registrar, RegistrationContext,
+    ServerHost, ServerStoppedEvent,
 };
 
 /// The SDK's one `Default` session instance.
