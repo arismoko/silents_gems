@@ -1,23 +1,13 @@
 //! The lamp rule's game glue.
 //!
 //! Upstream's `GemLampBlock` switches its own block to the one its state table names, on place
-//! and on a neighbour change (`block/GemLampBlock.java`, `checkAndUpdateState`). The neighbour
-//! change is the [`Lamp`] part's `neighbor_changed`, whose host writes the level, so it switches
-//! the lamp at once. A part has no `onPlace`, so a placed lamp is heard through `block_changed`,
-//! whose host cannot write: those positions are queued and checked at `Hooks::level_tick_post`.
-//!
-//! The queue holds positions only: at the tick the current block id is parsed back to
-//! (gem, state) with [`crate::runtime::lamp_of`], so a position whose block changed in between
-//! (broken, replaced by a player) is simply dropped. A lamp switched by either path reports
-//! `block_changed` like any other write; that queues it once more, and the next pass finds the
-//! target equal to the current state and writes nothing.
-
-use std::collections::{BTreeMap, BTreeSet};
-use std::sync::{Mutex, MutexGuard, OnceLock};
+//! and on a neighbour change (`block/GemLampBlock.java`, `checkAndUpdateState`). Both moments are
+//! the [`Lamp`] part's: `on_place` and `neighbor_changed` get a host that writes the level, so the
+//! lamp switches at once, within the placement or the redstone update, as upstream does.
 
 use mod_api::{
-    self, BlockChangedEvent, BlockPart, BlockUpdateFlags, LevelHost, LevelRef, LevelWriteHost,
-    NeighborChangedEvent, Registrar, ServerHost,
+    self, BlockPart, BlockUpdateFlags, LevelWriteHost, NeighborChangedEvent, OnPlaceEvent,
+    Registrar,
 };
 
 use crate::runtime;
@@ -30,58 +20,35 @@ pub struct Lamp;
 
 #[mod_api::sunrise_part]
 impl BlockPart for Lamp {
+    /// `GemLampBlock.onPlace`: a lamp written into the level by any means (a player, `/setblock`,
+    /// `/fill`, a structure, a piston) takes the state for the signal it reads, within the call.
+    fn on_place(&self, level: &mut dyn LevelWriteHost, event: &mut OnPlaceEvent) {
+        switch_to_signal(level, [event.pos.x, event.pos.y, event.pos.z], event.state);
+    }
+
     /// `GemLampBlock.neighborChanged`: switch to the lamp its table names for the signal now.
     fn neighbor_changed(&self, level: &mut dyn LevelWriteHost, event: &mut NeighborChangedEvent) {
-        let pos = [event.pos.x, event.pos.y, event.pos.z];
-        let Some((gem, current)) = level.state_block(event.state).and_then(runtime::lamp_of) else {
-            return;
-        };
-        let Some(powered) = level.has_neighbor_signal(pos) else {
-            return;
-        };
-        let target = current.with_power(powered);
-        if target == current {
-            return;
-        }
-        if let Some(state) = level.block_state_id(&target.block_name(gem.name)) {
-            // `UPDATE_CLIENTS`, as upstream's `world.setBlock(pos, newState, UPDATE_CLIENTS)`.
-            level.set_block(pos, state, BlockUpdateFlags::CLIENTS);
-        }
+        switch_to_signal(level, [event.pos.x, event.pos.y, event.pos.z], event.state);
     }
 }
 
-/// How many positions one level may keep queued. A `/fill` of lamp blocks enqueues one entry per
-/// block, and the pass below drains them all; the cap only bounds a pathological edit.
-const MAX_QUEUED: usize = 8192;
-
-/// The positions a lamp rule still owes, per dimension.
-#[derive(Default)]
-struct Queue {
-    by_level: BTreeMap<&'static str, BTreeSet<[i32; 3]>>,
-}
-
-fn locked() -> MutexGuard<'static, Queue> {
-    static QUEUE: OnceLock<Mutex<Queue>> = OnceLock::new();
-    QUEUE
-        .get_or_init(|| Mutex::new(Queue::default()))
-        .lock()
-        .expect("the lamp queue lock is never held across a panic")
-}
-
-fn enqueue(dimension: &'static str, pos: [i32; 3]) {
-    let mut queue = locked();
-    let waiting = queue.by_level.entry(dimension).or_default();
-    if waiting.len() < MAX_QUEUED {
-        waiting.insert(pos);
+/// Write the lamp its own table names for the signal `pos` reads now; a lamp already in that
+/// state is left untouched.
+fn switch_to_signal(level: &mut dyn LevelWriteHost, pos: [i32; 3], state: mod_api::BlockState) {
+    let Some((gem, current)) = level.state_block(state).and_then(runtime::lamp_of) else {
+        return;
+    };
+    let Some(powered) = level.has_neighbor_signal(pos) else {
+        return;
+    };
+    let target = current.with_power(powered);
+    if target == current {
+        return;
     }
-}
-
-fn take(dimension: &str) -> Vec<[i32; 3]> {
-    locked()
-        .by_level
-        .remove(dimension)
-        .map(|waiting| waiting.into_iter().collect())
-        .unwrap_or_default()
+    if let Some(state) = level.block_state_id(&target.block_name(gem.name)) {
+        // `UPDATE_CLIENTS`, as upstream's `world.setBlock(pos, newState, UPDATE_CLIENTS)`.
+        level.set_block(pos, state, BlockUpdateFlags::CLIENTS);
+    }
 }
 
 /// Attach [`Lamp`] to every lamp block the package declares.
@@ -90,68 +57,4 @@ pub fn declare(r: &mut dyn Registrar) {
         let block = r.block_key(&id);
         r.block_part(block, Lamp);
     }
-}
-
-/// A block was committed in the world: a lamp that was placed (or written) is due a check at the
-/// end of the tick.
-///
-/// This is the `onPlace` half of upstream's rule. It runs for every block change in the level, so
-/// it rejects anything whose new block id is not one of the 84 before it touches the queue.
-pub fn on_block_changed(level: &dyn LevelHost, event: &mut BlockChangedEvent) {
-    let Some(id) = level.state_block(event.new) else {
-        return;
-    };
-    if runtime::lamp_of(id).is_none() {
-        return;
-    }
-    if event.old == event.new {
-        return;
-    }
-    enqueue(
-        event.dimension.key().id(),
-        [event.pos.x, event.pos.y, event.pos.z],
-    );
-}
-
-/// Apply the queued lamps for the level that just ticked.
-///
-/// A lamp takes the state its own table names for the signal it reads now
-/// (`runtime::LampState::with_power`); a lamp already in that state is left untouched, which is
-/// what makes the pass idempotent and the reported `block_changed` harmless.
-pub fn on_level_tick_post(host: &mut dyn ServerHost, level: LevelRef) {
-    if !level.in_place(&*host) {
-        return;
-    }
-    let Some(dimension) = level.dimension().id(&*host) else {
-        return;
-    };
-    let waiting = take(dimension);
-    if waiting.is_empty() {
-        return;
-    }
-    for pos in waiting {
-        let Some(block) = level.block(&*host, pos) else {
-            continue;
-        };
-        let Some((gem, current)) = block.id(&*host).and_then(runtime::lamp_of) else {
-            continue;
-        };
-        let powered = level.best_neighbor_signal(&*host, pos).unwrap_or(0) > 0;
-        let target = current.with_power(powered);
-        if target == current {
-            continue;
-        }
-        let Some(state) = host.block_state_id(&target.block_name(gem.name)) else {
-            continue;
-        };
-        // `UPDATE_CLIENTS`, as upstream's `world.setBlock(pos, newState, UPDATE_CLIENTS)`:
-        // the state change reaches the client without a neighbour broadcast that would queue
-        // every lamp beside it again.
-        let _ = level.set_block(host, pos, state, BlockUpdateFlags::CLIENTS);
-    }
-}
-
-/// A world closed: lamp positions queued for it are dropped, not carried into the next save.
-pub fn clear_queue() {
-    locked().by_level.clear();
 }

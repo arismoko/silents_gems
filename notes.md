@@ -15,7 +15,7 @@ before that, and the old bundle is kept under
 loot, tags, the upstream generated worldgen files, textures and lang) plus the
 port's own 26.3 adaptation of the parts the schema cannot carry verbatim.
 Slice 3 adds the mod's one **logic** family: the gem lamp's redstone rule
-(`block_changed` + a `BlockPart::neighbor_changed` + `level_tick_post`), whose
+(a `BlockPart::on_place` and `neighbor_changed`), whose
 table is the pure, unit-tested `src/runtime.rs`.
 
 **Licence: MIT** (`gradle.properties:15`, `LICENSE` Copyright (c) 2014
@@ -282,13 +282,10 @@ vanilla switching behaviour on top of the port's rule.
 `src/runtime.rs` (pure, 16 tests) holds the gem table from slices 1-2 plus the lamp rule:
 `LampState { Off, On, InvertedOn, InvertedOff }`, `with_power`, `is_lit`, `is_inverted`, `has_item`,
 `light`, `block_name` / `item_name` / `drop_name`, `lamp_of` (id → gem + state) and the 84/42 id
-tables. `src/support.rs` is the glue: a `Lamp` `BlockPart` whose `neighbor_changed` queues the
-position (the hook's host cannot write the level), `Hooks::block_changed` queues a lamp that was
-placed or written (the `onPlace` half), and `Hooks::level_tick_post` reads the block id back, computes
-`with_power(best_neighbor_signal > 0)` and writes the target with `BlockUpdateFlags::CLIENTS`, as
-upstream's `UPDATE_CLIENTS` does. A position whose block changed in between is dropped; a write the
-port makes is reported back as `block_changed`, queues once more, and the next tick finds the target
-equal and writes nothing.
+tables. `src/support.rs` is the glue: a `Lamp` `BlockPart` whose `on_place` (any placement: player,
+`/setblock`, `/fill`, structure, piston) and `neighbor_changed` both read `has_neighbor_signal`, compute
+`with_power` and write the target with `BlockUpdateFlags::CLIENTS` in the call, as upstream's
+`UPDATE_CLIENTS` does; a lamp already in the target state is left untouched.
 
 **TDD red → green** (`ports/_shared/evidence/silentgems/sdk-test-red.log`): the lamp tests were written
 first against a stub rule and the suite reported **10 passed; 6 failed**, with
@@ -464,9 +461,9 @@ port keeps its sources, `assets/`, `data/`, the two ladder logs' evidence (moved
 ```
 horizon-mod.toml        id/version 5.2.1/api 0.2 + [native] pin (0a875da / e59da90)
 Cargo.toml              edition 2024, the SDK's horizon-mod-api from .horizon/sdk/
-src/lib.rs              the one impl Hooks: register, block_changed, level_tick_post
+src/lib.rs              the one impl Hooks: register and the feature ticks
 src/runtime.rs          the gem table + the lamp state machine, 16 tests, no mod_api
-src/support.rs          the Lamp BlockPart and the queued tick write
+src/support.rs          the Lamp BlockPart (on_place, neighbor_changed)
 silentgems.hmod         delivered 1,446-entry package (content + code)
 assets/silentgems/      189 blockstates, 189 block models, 21 item models,
                         168 item definitions, 147 + 21 textures, lang/en_us.json

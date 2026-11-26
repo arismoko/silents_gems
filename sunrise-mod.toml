@@ -1,7 +1,7 @@
 # Silent's Gems for Sunrise: native code in src/ with its data/ and assets/.
 id = "silentgems"
 name = "Silent's Gems"
-version = "5.3.7"
+version = "5.3.8"
 description = "Twenty-one gems with their ores, building blocks, lamps, glowroses, teleporters, coffee and more."
 authors = ["SilentChaos512", "arismoko"]
 license = "MIT"
@@ -11,4 +11,4 @@ side = "both"
 
 [native]
 game = "26.3"
-sunrise = "6a02076f89cd189d74d63492dda5b023fa85a38f"
+sunrise = "ba1f24e4ad41246b558230aa665539dc768b1287"

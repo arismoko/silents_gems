@@ -2,7 +2,7 @@
 //! meal, the pet summoners, the teleporters and their linker. The rules are in [`crate::rules`].
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::{Mutex, MutexGuard, OnceLock, RwLock};
+use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError, RwLock};
 
 use mod_api::{
     self, AttachmentCodec, AttachmentDescriptor, AttachmentKey, BlockPart, BlockState,
@@ -387,13 +387,7 @@ impl BlockPart for RedstoneTeleporter {
 }
 
 fn is_linker(stack: &ItemStack) -> bool {
-    stack.item() == linker_key()
-}
-
-fn linker_key() -> mod_api::ItemKey {
-    *LINKER
-        .get()
-        .expect("the linker key is bound at registration")
+    LINKER.get() == Some(&stack.item())
 }
 
 static CUP: OnceLock<mod_api::ItemKey> = OnceLock::new();
@@ -650,9 +644,7 @@ struct Queue(Mutex<Pending>);
 
 impl Queue {
     fn lock_pending(&self) -> MutexGuard<'_, Pending> {
-        self.0
-            .lock()
-            .expect("the pending queue lock is never held across a panic")
+        self.0.lock().unwrap_or_else(PoisonError::into_inner)
     }
 }
 

@@ -580,6 +580,26 @@ mod tests {
     }
 
     #[test]
+    fn a_placed_lamp_takes_the_state_its_signal_names() {
+        let placed = |id, powered| {
+            lamp_of(id).map(|(gem, state)| state.with_power(powered).block_name(gem.name))
+        };
+        assert_eq!(
+            placed("silentgems:ruby_lamp", true).as_deref(),
+            Some("silentgems:ruby_lamp_on")
+        );
+        assert_eq!(
+            placed("silentgems:ruby_lamp", false).as_deref(),
+            Some("silentgems:ruby_lamp")
+        );
+        assert_eq!(
+            placed("silentgems:ruby_lamp_inverted_on", true).as_deref(),
+            Some("silentgems:ruby_lamp_inverted")
+        );
+        assert_eq!(placed("minecraft:stone", true), None);
+    }
+
+    #[test]
     fn a_signal_switches_each_state_both_ways() {
         assert_eq!(LampState::Off.with_power(true), LampState::On);
         assert_eq!(LampState::On.with_power(false), LampState::Off);

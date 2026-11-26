@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! Silent's Gems for Sunrise — the one `impl Hooks` at the crate root.
 //!
 //! Ported from Silent's Gems 5.2.0 (`SilentChaos512/SilentGems`, MIT), migrated from the retired
@@ -5,14 +6,13 @@
 //! the 21 gems and their storage blocks, the 84 ores with their overworld/nether/end generation,
 //! and the 84 gem lamps. Everything except the lamps is content in `data/` and `assets/`; the
 //! lamp rule lives in [`runtime`] (the state table, tested by `cargo test` alone) and its game
-//! glue in [`support`] (one `BlockPart` and the tick write).
+//! glue in [`support`] (one `BlockPart`).
 //!
 //! | Moment | Where | What it does |
 //! |---|---|---|
 //! | `register` | this module | attaches the lamp part to the 84 lamp blocks |
+//! | `on_place` | [`support::Lamp`] Part | switches a placed lamp for the signal it reads |
 //! | `neighbor_changed` | [`support::Lamp`] Part | switches a lamp for the signal it reads |
-//! | `block_changed` | this module | queues a lamp that was placed or written |
-//! | `level_tick_post` | this module | writes each queued lamp's state for the signal it reads |
 
 pub mod features;
 pub mod rules;
@@ -20,12 +20,11 @@ pub mod runtime;
 pub mod support;
 
 use mod_api::{
-    self, BlockChangedEvent, EntityTickPostEvent, Hooks, HostSide, LevelHost, LevelTickPostEvent,
-    Registrar, RegistrationContext, ServerHost, ServerStoppedEvent,
+    self, EntityTickPostEvent, Hooks, HostSide, LevelTickPostEvent, Registrar, RegistrationContext,
+    ServerHost, ServerStoppedEvent,
 };
 
-/// The SDK's one `Default` session instance; the queue lives behind the lock in [`support`],
-/// because the `BlockPart` is constructed at registration and outlives this value.
+/// The SDK's one `Default` session instance.
 #[derive(Default)]
 struct Mod;
 
@@ -40,7 +39,6 @@ impl Hooks for Mod {
     /// A world closed: drop what was queued for it.
     fn server_stopped(&self, _: &mut dyn ServerHost, _: &mut ServerStoppedEvent) {
         features::clear_pending();
-        support::clear_queue();
     }
 
     /// After entities tick: each rabbit counts its coffee timer.
@@ -48,17 +46,11 @@ impl Hooks for Mod {
         features::on_entity_tick_post(host, event);
     }
 
-    /// A block was committed: a lamp that was placed (or written) is due a check.
-    fn block_changed(&self, level: &dyn LevelHost, event: &mut BlockChangedEvent) {
-        support::on_block_changed(level, event);
-    }
-
-    /// After a level's tick pass, in the level that just ticked: apply the queued lamp states.
+    /// After a level's tick pass, in the level that just ticked: apply the queued teleporter sends.
     fn level_tick_post(&self, host: HostSide<'_>, event: &mut LevelTickPostEvent) {
         let HostSide::Server(host) = host else {
             return;
         };
         features::on_level_tick_post(host, event.level);
-        support::on_level_tick_post(host, event.level);
     }
 }
